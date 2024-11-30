@@ -18,4 +18,8 @@ urlpatterns = [
          name='password_reset_confirm'),
     path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('my_borrowed/', views.MyBorrowedView.as_view(), name='my_borrowed'),
+    path('all_borrowed_books/', views.BorrowedBooksByLibrarianView.as_view(), name='all_borrowed_books'),
+    path('book/<uuid:pk>/borrow/', BorrowBookView.as_view(), name='borrow_book'),
+    path('book/<uuid:pk>/renew/', views.renew_book_librarian, name='renew_book_librarian'),
 ]

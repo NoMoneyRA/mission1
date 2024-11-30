@@ -113,7 +113,8 @@ class BorrowBookView(LoginRequiredMixin, FormView):
 
         book_instance.borrower = self.request.user
         book_instance.due_back = form.cleaned_data['due_back']
-        book_instance.status = 'o'
+        book_instance.status = 'o'  # Меняем статус на "взята"
         book_instance.save()
 
         return redirect('index')
+
