@@ -97,3 +97,23 @@ class BorrowedBooksByLibrarianView(PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         return BookInstance.objects.filter(status='o').order_by('due_back')
+
+
+class BorrowBookView(LoginRequiredMixin, FormView):
+    template_name = 'borrow_book.html'
+    form_class = BorrowBookForm
+
+    def form_valid(self, form):
+        book_instance_id = self.kwargs['pk']
+        book_instance = get_object_or_404(BookInstance, pk=book_instance_id)
+
+        if book_instance.status != 'a':
+            form.add_error(None, "Эта книга уже занята.")
+            return self.form_invalid(form)
+
+        book_instance.borrower = self.request.user
+        book_instance.due_back = form.cleaned_data['due_back']
+        book_instance.status = 'o'
+        book_instance.save()
+
+        return redirect('index')
