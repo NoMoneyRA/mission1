@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Авторы{% endblock %}
+
+
+{% block content %}
+    {% if user.is_staff %}
+            <ul class="sidebar-nav">
+                {% if perms.catalog.add_author %}
+                    <div class="centered-container">
+                        <a href="{% url 'author-create' %}" class="btn2">Добавить автора</a>
+                    </div>
+                {% endif %}
+            </ul>
+        {% endif %}
+    <h1>Авторы</h1>
+    <p>На этой странице представлены все авторы, чьи книги доступны в нашей библиотеке.</p>
+
+    {% if authors %}
+        <ul class="author-list">
+            {% for author in authors %}
+                <li class="author-item">
+                    <h2>{{ author.name }}</h2>
+                    <p>Дата рождения: {{ author.date_of_birth }}</p>
+                    <p>Дата смерти: {{ author.date_of_death }}</p>
+                    <p>Описание: {{ author.bio|default:"Нет информации о биографии" }}</p>
+                    <a href="{% url 'author_detail' author.pk %}">Подробнее о авторе</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет доступных авторов</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="borrowed-container">
+    <h2>Мои взятые книги</h2>
+
+    {% if borrowed_books %}
+    <ul class="borrowed-books-list">
+        {% for instance in borrowed_books %}
+        <li class="book-item">
+            <div class="book-info">
+                <h3>{{ instance.book.title }}</h3>
+                <p><strong>Автор:</strong> {{ instance.book.author.name }}</p>
+                <p><strong>Дата взятия:</strong> {{ instance.date_borrowed|date:"d M Y" }}</p>
+                <p><strong>Дата возврата:</strong> {{ instance.due_back|date:"d M Y" }}</p>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>У вас нет взятых книг.</p>
+    {% endif %}
+</div>
+{% endblock %}

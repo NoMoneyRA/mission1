@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="delete-page-container">
+    <h1>Удаление книги</h1>
+    <p>Вы уверены, что хотите удалить книгу <strong>{{ object.title }}</strong>?</p>
+    <p>Все связанные экземпляры книги должны быть удалены перед этим.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn delete-btn">Удалить</button>
+        <a href="{% url 'book_list' %}" class="btn cancel-btn">Отмена</a>
+    </form>
+</div>
+{% endblock %}
