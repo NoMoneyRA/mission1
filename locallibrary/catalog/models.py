@@ -83,3 +83,16 @@ class BookInstance(models.Model):
 
     def __str__(self):
         return f'{self.id} ({self.book.title})'
+
+
+class BelovedBook(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="beloved_book")
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        if BelovedBook.objects.filter(user=self.user).exists() and not self.pk:
+            raise ValidationError("У вас уже есть любимая книга!")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Любимая книга {self.user.username}: {self.book.title}'

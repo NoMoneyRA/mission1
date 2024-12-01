@@ -118,3 +118,118 @@ class BorrowBookView(LoginRequiredMixin, FormView):
 
         return redirect('index')
 
+
+@permission_required('catalog.can_mark_returned')
+def renew_book_librarian(request, pk):
+    book_instance = get_object_or_404(BookInstance, pk=pk)
+
+    if request.method == 'POST':
+        form = RenewBookForm(request.POST)
+
+        if form.is_valid():
+            book_instance.due_back = form.cleaned_data['due_back']
+            book_instance.save()
+
+            return HttpResponseRedirect(reverse('all_borrowed_books'))
+
+    else:
+        proposed_renewal_date = datetime.date.today() + datetime.timedelta(weeks=3)
+        form = RenewBookForm(initial={'renewal_date': proposed_renewal_date})
+
+    context = {
+        'form': form,
+        'book_instance': book_instance,
+    }
+
+    return render(request, 'book_renew_librarian.html', context)
+
+
+class AuthorCreate(PermissionRequiredMixin, CreateView):
+    model = Author
+    fields = ['first_name', 'last_name', 'date_of_birth', 'date_of_death']
+    initial = {'date_of_death': ''}
+    permission_required = 'catalog.add_author'
+    template_name = 'author_form.html'
+
+
+class AuthorUpdate(PermissionRequiredMixin, UpdateView):
+    model = Author
+    fields = ['first_name', 'last_name', 'date_of_birth', 'date_of_death']
+    template_name = 'author_update.html'
+    success_url = reverse_lazy('authors')
+    permission_required = 'catalog.change_author'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Обновить сведения об авторе"
+        return context
+
+
+class AuthorDelete(PermissionRequiredMixin, DeleteView):
+    model = Author
+    template_name = 'author_delete.html'
+    success_url = reverse_lazy('authors')
+    permission_required = 'catalog.delete_author'
+
+    def form_valid(self, form):
+        try:
+            self.object.delete()
+            return HttpResponseRedirect(self.success_url)
+        except Exception:
+            return HttpResponseRedirect(
+                reverse("author-delete", kwargs={"pk": self.object.pk})
+            )
+
+
+@method_decorator(permission_required('catalog.add_book'), name='dispatch')
+class BookCreateView(CreateView):
+    model = Book
+    form_class = BookForm
+    template_name = 'book_form.html'
+    success_url = reverse_lazy('book_list')
+
+    def form_valid(self, form):
+        book = form.save(commit=False)
+        book.save()
+        form.save_m2m()
+        messages.success(self.request, f"Книга '{book.title}' успешно создана.")
+        return super().form_valid(form)
+
+
+@method_decorator(permission_required('catalog.change_book'), name='dispatch')
+class BookUpdateView(UpdateView):
+    model = Book
+    form_class = BookForm
+    template_name = 'book_form.html'
+    success_url = reverse_lazy('book_list')
+
+    def form_valid(self, form):
+        book = form.save(commit=False)
+        book.save()
+        form.save_m2m()
+        messages.success(self.request, f"Книга '{book.title}' успешно создана.")
+        return super().form_valid(form)
+
+@method_decorator(permission_required('catalog.delete_book'), name='dispatch')
+class BookDeleteView(DeleteView):
+    model = Book
+    template_name = 'book_confirm_delete.html'
+    success_url = reverse_lazy('book_list')
+
+    def form_valid(self, form):
+        if self.object.bookinstance_set.exists():
+            return redirect('book_list')
+        return super().form_valid(form)
+
+
+@login_required
+def add_beloved_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+
+    if request.method == 'POST':
+        if hasattr(request.user, 'beloved_book'):
+            request.user.beloved_book.delete()
+        BelovedBook.objects.create(user=request.user, book=book)
+        messages.success(request, f"Книга '{book.title}' теперь ваша любимая.")
+        return redirect('book_detail', pk=pk)
+    return redirect('book_list')
